@@ -1,5 +1,5 @@
 import { IsNumber, IsString, MinLength } from "class-validator";
-// import { Match } from "src/common/validator/match.decorator";
+import { Match } from "src/auth/decorators";
 
 export class ChangePasswordAuthDto {
 
@@ -10,11 +10,11 @@ export class ChangePasswordAuthDto {
   @MinLength(8)
   public password: string;
 
-  // @IsString()
-  // @MinLength(8)
-  // @Match('password', {
-  //   message: 'The password and confirmation do not match',
-  // })
+  @IsString()
+  @MinLength(8)
+  @Match('password', {
+    message: 'The password and confirmation do not match',
+  })
   public password_confirmation: string;
 
 }

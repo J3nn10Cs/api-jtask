@@ -19,9 +19,9 @@
   import * as bcrypt from 'bcrypt'
   import { TokenDocument, Tokens } from './entities/token.entity';
   import { generateToken } from './utils/token';
-  import { AuthEmail } from './emails/AuthEmail';
   import { JwtService } from '@nestjs/jwt';
   import { JwtPayload } from './interfaces/jwt-payload.interface';
+  import { AuthEmail } from './utils/emails/AuthEmail';
 
   @Injectable()
   export class UserAuthService {
@@ -51,18 +51,11 @@
         })
 
         const token = new this.tokensModel()
-        
         token.user = user.id
-
         token.token = generateToken()
 
-
         if(!userExists) {
-          await AuthEmail.sendConfirmationEmail({
-            email: user.email,
-            name: user.name,
-            token: token.token,
-          });
+          await this.sendConfirmationEmail(user, token.token);
         }
 
         await Promise.allSettled([
@@ -80,11 +73,7 @@
     async confirmAccount(confirmUserAuthDto : ConfirmUserAuthDto) {
       const { token } = confirmUserAuthDto;
 
-      const tokenExists = await this.tokensModel.findOne({ token });
-
-      if (!tokenExists) {
-        throw new BadRequestException('Token no válido o expirado');
-      }
+      const tokenExists = await this.validateExistingToken(token);
 
       const user = await this.usersModel.findById(tokenExists.user);
 
@@ -113,16 +102,9 @@
         }
 
         if(!user.confirmed){
-          const token = new this.tokensModel()
-          token.token = generateToken()
-          token.user = user.id
-          await token.save();
+          const token = await this.createAndSaveToken(user.id);
 
-          await AuthEmail.sendConfirmationEmail({
-            email: user.email,
-            name: user.name,
-            token: token.token,
-          });
+          await this.sendConfirmationEmail(user, token.token);
 
           throw new BadRequestException('La cuenta no ha sido confirmada, se ha enviado otro email de confirmacion');
         }
@@ -157,15 +139,9 @@
           throw new BadRequestException('El usuario ya esta confirmado');
         }
 
-        const token = new this.tokensModel();
-        token.token = generateToken();
-        token.user = user.id;
+        const token = await this.createAndSaveToken(user.id);
 
-        await AuthEmail.sendConfirmationEmail({
-          email: user.email,
-          name: user.name,
-          token: token.token,
-        });
+        await this.sendConfirmationEmail(user, token.token);
 
         await Promise.allSettled([
           user.save(),
@@ -187,15 +163,9 @@
           throw new BadRequestException('El usuario no está registrado');
         }
 
-        const token = new this.tokensModel();
-        token.token = generateToken();
-        token.user = user.id;
+        const token = await this.createAndSaveToken(user.id);
 
-        AuthEmail.sendPasswordForgot({
-          email : user.email,
-          name : user.name,
-          token : token.token
-        })
+        await this.sendConfirmationEmail(user, token.token);
 
         return 'Se ha enviado un correo electrónico con las instrucciones para restablecer tu contraseña';
 
@@ -208,11 +178,7 @@
       try {
         const { token } = validateTokenAuthDto;
 
-        const tokenExists = await this.tokensModel.findOne({ token });
-
-        if (!tokenExists) {
-          throw new BadRequestException('Token no válido o expirado');
-        }
+        await this.validateExistingToken(token);
 
         return 'Token válido';
 
@@ -244,8 +210,31 @@
       return token
     }
 
-    private handleDBExceptions(error: any) {
+    private async sendConfirmationEmail(user: UserDocument, token: string) {
+      await AuthEmail.sendConfirmationEmail({
+        email: user.email,
+        name: user.name,
+        token,
+      });
+    }
 
+    private async createAndSaveToken(userId: string) {
+      const token = new this.tokensModel();
+      token.token = generateToken();
+      token.user = userId;
+      await token.save();
+      return token;
+    }
+
+    private async validateExistingToken(token: string) {
+      const tokenExists = await this.tokensModel.findOne({ token });
+      if (!tokenExists) {
+        throw new BadRequestException('Token no válido o expirado');
+      }
+      return tokenExists;
+    }
+
+    private handleDBExceptions(error: any) {
       if (error.code === 11000) {
         throw new BadRequestException('Ya existe un usuario con ese correo');
       }
@@ -256,9 +245,5 @@
       this.logger.error(`Error creating User: ${error.message}`, error.stack);
 
       throw new InternalServerErrorException(`Unexpected error, check server logs`);
-    }
-
-    async authenticate() {
-
     }
   }

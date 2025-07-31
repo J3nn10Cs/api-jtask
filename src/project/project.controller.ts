@@ -2,17 +2,16 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { Auth } from 'src/auth/decorators/auth.decorator';
-import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { UserDocument } from 'src/auth/entities/user-auth.entity';
+import { Auth, GetUser } from 'src/auth/decorators';
 
-@Auth()
+Auth()
 @Controller('projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Post()
-  @Auth()
+  
   createProject(
     @Body() createProjectDto: CreateProjectDto,
     @GetUser() user : UserDocument
@@ -21,7 +20,6 @@ export class ProjectController {
   }
 
   @Get()
-  @Auth()
   findAll(
     @GetUser() user : UserDocument
   ) {
@@ -29,7 +27,6 @@ export class ProjectController {
   }
 
   @Get(':id')
-  @Auth()
   findOne(
     @Param('id') id: string,
     @GetUser() user: UserDocument

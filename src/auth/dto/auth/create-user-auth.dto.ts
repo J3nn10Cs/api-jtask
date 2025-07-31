@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from "class-validator";
-import { Match } from "src/auth/decorators/match.decorator";
+import { Match } from "src/auth/decorators";
 
 export class CreateUserAuthDto {
   @IsString()

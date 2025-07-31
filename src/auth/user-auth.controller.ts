@@ -9,9 +9,8 @@ import {
   RequestNewCodeAuthDto, 
   ValidateTokenAuthDto 
 } from './dto';
-import { Auth } from './decorators/auth.decorator';
 import { UserDocument } from './entities/user-auth.entity';
-import { GetUser } from './decorators/get-user.decorator';
+import { Auth, GetUser } from './decorators';
 
 @Controller('auth')
 export class UserAuthController {
