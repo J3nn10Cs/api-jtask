@@ -18,7 +18,6 @@ export class UserAuthController {
     private readonly userAuthService: UserAuthService
   ) {}
 
-  //Create a new user
   @Post('create-account')
   createUser(@Body() createUserAuthDto: CreateUserAuthDto) {
     return this.userAuthService.createUser(createUserAuthDto);
@@ -29,39 +28,37 @@ export class UserAuthController {
     return this.userAuthService.confirmAccount(confirmUserAuthDto);
   }
 
-  //login user
   @Post('login')
   // @ApiBearerAuth()
-  // @Auth()
   login(@Body() loginUserAuthDto: LoginAuthDto) {
     return this.userAuthService.login(loginUserAuthDto);
   }
 
-  //new code or token for user
   @Post('request-new-code')
   requestNewCode(@Body() requestNewCode: RequestNewCodeAuthDto) {
     return this.userAuthService.requestNewCode(requestNewCode);
   }
 
   @Post('forgot-password')
-  forgotPassword(@Body() forgotPasswordAuthDto: ForgotPasswordAuthDto) {
+  forgotPassword(
+    @Body() forgotPasswordAuthDto: ForgotPasswordAuthDto
+  ) {
     return this.userAuthService.forgotPassword(forgotPasswordAuthDto);
   }
 
-  //Validate token for user
   @Post('validate-token')
-  validateToken(@Body() validateTokenAuthDto : ValidateTokenAuthDto){
+  validateToken(
+    @Body() validateTokenAuthDto : ValidateTokenAuthDto
+  ){
     return this.userAuthService.validateToken(validateTokenAuthDto);
   }
 
-  //Change password for user
-  //The token is the user ID in this case
   @Post('/change-password/:token')
   changePassword(
     @Param('token') token : string,
     @Body() changePasswordAuthDto: ChangePasswordAuthDto
   ){
-    return this.userAuthService.changePassword(+token, changePasswordAuthDto);
+    return this.userAuthService.changePassword(token, changePasswordAuthDto);
   }
 
   @Get('user')

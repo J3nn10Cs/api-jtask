@@ -1,11 +1,7 @@
-import { IsNumber, IsString, MinLength } from "class-validator";
+import { IsString, MinLength } from "class-validator";
 import { Match } from "src/auth/decorators";
 
 export class ChangePasswordAuthDto {
-
-  @IsNumber()
-  public token: number;
-
   @IsString()
   @MinLength(8)
   public password: string;

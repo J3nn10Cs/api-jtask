@@ -48,6 +48,6 @@ export class ProjectController {
     @Param('id') id: string,
     @GetUser() user: UserDocument
   ) {
-    return this.projectService.remove(id);
+    return this.projectService.remove(user,id);
   }
 }

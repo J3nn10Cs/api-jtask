@@ -165,7 +165,7 @@
 
         const token = await this.createAndSaveToken(user.id);
 
-        await this.sendConfirmationEmail(user, token.token);
+        await this.sendPasswordForgot(user, token.token);
 
         return 'Se ha enviado un correo electrónico con las instrucciones para restablecer tu contraseña';
 
@@ -187,8 +187,32 @@
       }
     }
 
-    changePassword(token: number, changePasswordAuthDto: ChangePasswordAuthDto) {
-      return `This action changes the password for a userAuth with token ${token}`;
+    async changePassword(
+      token: string,
+      changePasswordAuthDto: ChangePasswordAuthDto
+    ) {
+      
+      try {
+        
+        const { password } = changePasswordAuthDto;
+        const tokenValidate = await this.validateExistingToken(token);
+        const user = await this.usersModel.findById(tokenValidate.user);
+  
+        if(user){
+          user.password = bcrypt.hashSync(password, 10)
+        } else {
+          throw new BadRequestException('El usuario no existe');
+        }
+
+        await Promise.allSettled([
+          user.save(),
+          this.tokensModel.deleteOne()
+        ]);
+
+        return 'Contraseña cambiada correctamente';
+      } catch (error) {
+        throw error
+      }
     }
 
     checkAuthStatus(user : UserDocument) {
@@ -212,6 +236,14 @@
 
     private async sendConfirmationEmail(user: UserDocument, token: string) {
       await AuthEmail.sendConfirmationEmail({
+        email: user.email,
+        name: user.name,
+        token,
+      });
+    }
+
+    private async sendPasswordForgot(user: UserDocument, token: string) {
+      await AuthEmail.sendPasswordForgot({
         email: user.email,
         name: user.name,
         token,

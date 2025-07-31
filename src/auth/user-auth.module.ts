@@ -28,7 +28,7 @@ import { Tokens, TokenSchema } from './entities/token.entity';
         return {
           secret : configService.get('JWT_SECRET'),
           signOptions : {
-            expiresIn : '180d'
+            expiresIn : '6d'
           }
         }
       }

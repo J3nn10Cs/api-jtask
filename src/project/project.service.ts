@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -95,7 +95,22 @@ export class ProjectService {
     }
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} project`;
+  async remove(
+    user : UserDocument,
+    id: string
+  ) {
+    try {
+      const project = await this.projectModel.findById(id);
+      if(!project) throw new BadRequestException('El proyecto no existe');
+      if(project.manager.toString() !== user.id.toString()) throw new BadRequestException('Solo el dueño del proyecto puede eliminarlo');
+
+      await this.projectModel.deleteOne();
+
+      return 'Proyecto eliminado correctamente';
+
+    } catch (error) {
+      throw error
+      
+    }
   }
 }
